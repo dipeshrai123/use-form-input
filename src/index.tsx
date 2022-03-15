@@ -9,7 +9,7 @@ type ValueType = object | [] | string | boolean | number;
 type ValidatorConfigType = {
   condition: boolean;
   message?: string;
-  onMatched?: (messages?: string) => void;
+  onMatch?: (messages?: string) => void;
 };
 
 type ValidatorType<T> = (
@@ -56,7 +56,7 @@ export function useFormInput<T>(fields: T): [
 
   const validator = (errors: any) => {
     return function (name: keyof T, config: ValidatorConfigType) {
-      const { condition, message, onMatched } = config;
+      const { condition, message, onMatch } = config;
 
       if (condition) {
         errors[name] = {
@@ -76,8 +76,8 @@ export function useFormInput<T>(fields: T): [
           }
         }
 
-        if (onMatched) {
-          onMatched(message);
+        if (onMatch) {
+          onMatch(message);
         }
       } else {
         delete errors[name];
