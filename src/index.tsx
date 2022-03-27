@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from 'react';
 
 type ErrorType<T> = {
   [key in keyof T]: { error: boolean; messages: Array<string> };
@@ -22,7 +22,7 @@ export function useFormInput<T>(fields: T): [
     onChange: (
       name: keyof T,
       value?: ValueType | ((previousValue: ValueType) => any)
-    ) => (event?: any) => void;
+    ) => (event?: React.ChangeEvent<any>) => void;
     validator: ValidatorType<T>;
     isValid: (errors: ErrorType<T> | {}) => boolean;
     errors: ErrorType<T>;
@@ -38,12 +38,14 @@ export function useFormInput<T>(fields: T): [
     name: keyof T,
     value?: ValueType | ((previousValue: ValueType) => any)
   ) => {
-    return function (event?: any) {
+    return function (event?: React.ChangeEvent<any>) {
+      event?.persist();
+
       setData((prev) => {
         if (value === undefined || value === null) {
           return { ...prev, [name]: event?.target?.value };
         } else {
-          if (typeof value === "function") {
+          if (typeof value === 'function') {
             const functionReturnValue = value(prev[name] as any);
             return { ...prev, [name]: functionReturnValue };
           } else {
