@@ -1,6 +1,6 @@
 {
   "name": "use-form-input",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Simple hook to provide form validation in react",
   "main": "dist/index.js",
   "scripts": {
