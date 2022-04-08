@@ -19,6 +19,7 @@ export function useFormInput<T>(fields: T): [
     isValid: (errors: ErrorType<T> | {}) => boolean;
     errors: ErrorType<T>;
     setErrors: React.Dispatch<React.SetStateAction<{}>>;
+    clear: () => void;
   }
 ] {
   const [data, setData] = React.useState<T>({
@@ -102,10 +103,46 @@ export function useFormInput<T>(fields: T): [
     return Object.keys(errors).length === 0;
   };
 
+  const clear = () => {
+    const formData = Object.keys(data).map((val) => {
+      const field = data[val];
+
+      return {
+        key: val,
+        value: field,
+        valueType: typeof field,
+      };
+    });
+
+    const emptyData = formData.reduce(
+      (acc, curr) => {
+        let resetValue;
+        if (curr.valueType === 'boolean') {
+          resetValue = false;
+        } else {
+          resetValue = '';
+        }
+
+        return { ...acc, [curr.key]: resetValue };
+      },
+      { ...data }
+    );
+
+    setData(emptyData);
+  };
+
   return [
     data,
     React.useMemo(
-      () => ({ setValue, onChange, validator, isValid, errors, setErrors }),
+      () => ({
+        setValue,
+        onChange,
+        validator,
+        isValid,
+        errors,
+        setErrors,
+        clear,
+      }),
       [errors]
     ),
   ];
