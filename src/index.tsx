@@ -1,28 +1,20 @@
 import * as React from 'react';
 
-type ErrorType<T> = {
-  [key in keyof T]: { error: boolean; messages: Array<string> };
-};
-
-type ValueType = object | [] | string | boolean | number;
-
-type ValidatorConfigType = {
-  condition: boolean;
-  message?: string;
-  onMatch?: (messages?: string) => void;
-};
-
-type ValidatorType<T> = (
-  errors: any
-) => (name: keyof T, config: ValidatorConfigType) => void;
+import {
+  ValidatorConfigType,
+  ErrorType,
+  ValidatorType,
+  ValueType,
+} from './types';
 
 export function useFormInput<T>(fields: T): [
   T,
   {
-    onChange: (
-      name: keyof T,
+    setValue: (
+      name?: keyof T,
       value?: ValueType | ((previousValue: ValueType) => any)
     ) => (event?: React.ChangeEvent<any>) => void;
+    onChange: (event?: React.ChangeEvent<any>) => void;
     validator: ValidatorType<T>;
     isValid: (errors: ErrorType<T> | {}) => boolean;
     errors: ErrorType<T>;
@@ -34,11 +26,13 @@ export function useFormInput<T>(fields: T): [
   });
   const [errors, setErrors] = React.useState<any>({});
 
-  const onChange = (
+  // setValue to set the individual items
+  const setValue = (
     name: keyof T,
     value?: ValueType | ((previousValue: ValueType) => any)
   ) => {
     return function (event?: React.ChangeEvent<any>) {
+      // for previous version of react ( pooling )
       event?.persist();
 
       setData((prev) => {
@@ -56,6 +50,23 @@ export function useFormInput<T>(fields: T): [
     };
   };
 
+  // onChange for `named` form fields
+  const onChange = function (event?: React.ChangeEvent<any>) {
+    // for previous version of react ( pooling )
+    event?.persist();
+
+    const fieldName = event?.target.name;
+
+    if (!fieldName) {
+      throw new Error(`'name' attribute is missing in props`);
+    }
+
+    setData((prev) => {
+      return { ...prev, [fieldName]: event?.target?.value };
+    });
+  };
+
+  // validator
   const validator = (errors: any) => {
     return function (name: keyof T, config: ValidatorConfigType) {
       const { condition, message, onMatch } = config;
@@ -94,7 +105,7 @@ export function useFormInput<T>(fields: T): [
   return [
     data,
     React.useMemo(
-      () => ({ onChange, validator, isValid, errors, setErrors }),
+      () => ({ setValue, onChange, validator, isValid, errors, setErrors }),
       [errors]
     ),
   ];
