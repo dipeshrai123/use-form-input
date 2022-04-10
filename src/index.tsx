@@ -7,7 +7,11 @@ import {
   ValueType,
 } from './types';
 
-export function useFormInput<T>(fields: T): [
+export function useFormInput<T>(
+  fields: T,
+  onSubmit?: (data: T) => void,
+  validation?: (data: T) => any
+): [
   T,
   {
     setValue: (
@@ -15,17 +19,42 @@ export function useFormInput<T>(fields: T): [
       value?: ValueType | ((previousValue: ValueType) => any)
     ) => (event?: React.ChangeEvent<any>) => void;
     onChange: (event?: React.ChangeEvent<any>) => void;
+    onSubmit: (e: React.FormEvent) => void;
     validator: ValidatorType<T>;
     isValid: (errors: ErrorType<T> | {}) => boolean;
     errors: ErrorType<T>;
     setErrors: React.Dispatch<React.SetStateAction<{}>>;
     clear: () => void;
+    modified: T;
   }
 ] {
   const [data, setData] = React.useState<T>({
     ...fields,
   });
   const [errors, setErrors] = React.useState<any>({});
+  const [modified, setModified] = React.useState<any>({});
+
+  // called every time data is changed
+  React.useEffect(() => {
+    if (validation) {
+      const catchedErrors = validation(data);
+
+      setErrors(catchedErrors);
+    }
+  }, [data]);
+
+  // checks whether the data is modified or not
+  React.useEffect(() => {
+    const modifiedData = Object.keys(fields).reduce((acc, curr) => {
+      if (fields[curr] !== data[curr]) {
+        return { ...acc, [curr]: true };
+      }
+
+      return { ...acc, [curr]: false };
+    }, {});
+
+    setModified(modifiedData);
+  }, [data]);
 
   // setValue to set the individual items
   const setValue = (
@@ -73,20 +102,17 @@ export function useFormInput<T>(fields: T): [
       const { condition, message, onMatch } = config;
 
       if (condition) {
-        errors[name] = {
-          error: true,
-          messages: errors[name]?.messages ?? [],
-        };
+        errors[name] = errors[name] ?? [];
 
         const hasErrorMessage = message !== null && message !== undefined;
 
         if (Object.prototype.hasOwnProperty.call(errors, name)) {
           if (hasErrorMessage) {
-            errors[name].messages = [...errors[name].messages, message];
+            errors[name] = [...errors[name], message];
           }
         } else {
           if (hasErrorMessage) {
-            errors[name].messages = [message];
+            errors[name] = [message];
           }
         }
 
@@ -131,6 +157,29 @@ export function useFormInput<T>(fields: T): [
     setData(emptyData);
   };
 
+  const modifyData = () => {
+    const modifiedData = Object.keys(fields).reduce((acc, curr) => {
+      return { ...acc, [curr]: true };
+    }, {});
+
+    setModified(modifiedData);
+  };
+
+  // handle the submit
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    modifyData();
+
+    if (!isValid(errors)) {
+      return;
+    }
+
+    if (onSubmit) {
+      onSubmit(data);
+    }
+  };
+
   return [
     data,
     React.useMemo(
@@ -142,8 +191,10 @@ export function useFormInput<T>(fields: T): [
         errors,
         setErrors,
         clear,
+        modified,
+        onSubmit: handleSubmit,
       }),
-      [errors]
+      [errors, modified]
     ),
   ];
 }
