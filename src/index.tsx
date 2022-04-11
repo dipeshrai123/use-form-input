@@ -6,10 +6,11 @@ import {
   ValidatorType,
   ValueType,
 } from './types';
+import { compareObjectKeys } from './compareObjectKeys';
 
 export function useFormInput<T>(
   fields: T,
-  onSubmit?: (data: T) => void,
+  handleSubmit?: (data: T) => void,
   validation?: (data: T) => any
 ): [
   T,
@@ -45,15 +46,9 @@ export function useFormInput<T>(
 
   // checks whether the data is modified or not
   React.useEffect(() => {
-    const modifiedData = Object.keys(fields).reduce((acc, curr) => {
-      if (fields[curr] !== data[curr]) {
-        return { ...acc, [curr]: true };
-      }
-
-      return { ...acc, [curr]: false };
-    }, {});
-
-    setModified(modifiedData);
+    const compared = compareObjectKeys(fields, data);
+    const newlyModified = { ...modified, ...compared };
+    setModified(newlyModified);
   }, [data]);
 
   // setValue to set the individual items
@@ -125,10 +120,12 @@ export function useFormInput<T>(
     };
   };
 
+  // checks whether the errors is empty or not
   const isValid = (errors: ErrorType<T> | {}) => {
     return Object.keys(errors).length === 0;
   };
 
+  // clears the form
   const clear = () => {
     const formData = Object.keys(data).map((val) => {
       const field = data[val];
@@ -157,26 +154,22 @@ export function useFormInput<T>(
     setData(emptyData);
   };
 
-  const modifyData = () => {
+  // handle the submit
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
     const modifiedData = Object.keys(fields).reduce((acc, curr) => {
       return { ...acc, [curr]: true };
     }, {});
 
     setModified(modifiedData);
-  };
-
-  // handle the submit
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    modifyData();
 
     if (!isValid(errors)) {
       return;
     }
 
-    if (onSubmit) {
-      onSubmit(data);
+    if (handleSubmit) {
+      handleSubmit(data);
     }
   };
 
@@ -192,7 +185,7 @@ export function useFormInput<T>(
         setErrors,
         clear,
         modified,
-        onSubmit: handleSubmit,
+        onSubmit,
       }),
       [errors, modified]
     ),
