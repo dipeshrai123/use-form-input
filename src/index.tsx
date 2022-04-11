@@ -18,7 +18,7 @@ export function useFormInput<T>(
     setValue: (
       name?: keyof T,
       value?: ValueType | ((previousValue: ValueType) => any)
-    ) => (event?: React.ChangeEvent<any>) => void;
+    ) => void;
     onChange: (event?: React.ChangeEvent<any>) => void;
     onSubmit: (e: React.FormEvent) => void;
     validator: ValidatorType<T>;
@@ -54,25 +54,16 @@ export function useFormInput<T>(
   // setValue to set the individual items
   const setValue = (
     name: keyof T,
-    value?: ValueType | ((previousValue: ValueType) => any)
+    value: ValueType | ((previousValue: ValueType) => any)
   ) => {
-    return function (event?: React.ChangeEvent<any>) {
-      // for previous version of react ( pooling )
-      event?.persist();
-
-      setData((prev) => {
-        if (value === undefined || value === null) {
-          return { ...prev, [name]: event?.target?.value };
-        } else {
-          if (typeof value === 'function') {
-            const functionReturnValue = value(prev[name] as any);
-            return { ...prev, [name]: functionReturnValue };
-          } else {
-            return { ...prev, [name]: value };
-          }
-        }
-      });
-    };
+    setData((prev) => {
+      if (typeof value === 'function') {
+        const functionReturnValue = value(prev[name] as any);
+        return { ...prev, [name]: functionReturnValue };
+      } else {
+        return { ...prev, [name]: value };
+      }
+    });
   };
 
   // onChange for `named` form fields
