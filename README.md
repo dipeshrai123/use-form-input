@@ -5,8 +5,8 @@
 ### Features
 
 - Small size and no dependencies
+- Easy to use APIs
 - Fully customizable form handling and validations
-- Easy to use
 
 ### Installation
 
@@ -18,7 +18,7 @@ npm i use-form-input
 
 ### Quickstart
 
-#### Basic form handling
+#### 1. Basic form handling
 
 Form handling can be done with `useFormInput`.
 
@@ -67,7 +67,7 @@ export default function BasicFormHandling() {
 
 Note: The form element must have `name` prop available to use `onChange`.
 
-#### Form Validation
+#### 2. Form Validation
 
 Form validation can be done by passing third parameter ( function ) which should return an error object.
 The function is called with the data.
@@ -135,7 +135,7 @@ export default function FormValidation() {
 
 Note: `modified` object is used so that, the error is not shown by default. The form should either be submitted or certain fields must change before it should show error. `modified` object has the property same as fields passed to `useFormInput` hook.
 
-#### Manual Validation
+#### 3. Manual Validation
 
 Form can be manually validated by using `validator`, `setErrors` and `isValid` methods.
 
@@ -208,7 +208,7 @@ export default function ManualValidation() {
 }
 ```
 
-#### Manually Setting Values
+#### 4. Manually Setting Values
 
 We need a method to manually set the values of certain fields. We can do it by using `setValue` method.
 
@@ -232,7 +232,7 @@ const [data, { setValue }] = useFormInput({ firstName: '' });
 1. Field Name
 2. Value
 
-#### Modifiying previous values
+#### 5. Modifiying previous values
 
 We can modify the previous values using `setValue` method. For example, we can use it in checkbox.
 
@@ -253,7 +253,7 @@ const [data, { setValue }] = useFormInput({ married: false });
 
 It works like a `setState` function, getting previous value and returning modified one.
 
-#### Clearing form
+#### 6. Clearing form
 
 We can clear the from by using `clear` method which sets all the modified fields to its initial one.
 
